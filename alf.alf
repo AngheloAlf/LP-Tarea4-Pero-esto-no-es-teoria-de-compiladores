@@ -1,1 +1,2 @@
-VAR(wea) <= 5
+   VAR(   wea) <= 5
+5 => VAR(Wae)
