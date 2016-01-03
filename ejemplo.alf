@@ -1,0 +1,30 @@
+$^PROC(Dummy)
+	#1024
+^$
+
+$^PROC(CaseA)
+	#42
+^$
+
+$^PROC(CaseB)
+	#(Dummy)
+^$
+
+$^PROC(Default)
+	#0
+^$
+
+$^PROC(IfCaseB)
+	IFELSE (CaseB) (EQ PARAM0 2) (Default) => VAR(Res)
+	#Res
+^$
+
+$^PROC(Switch)
+	VAR(Res) <= IFELSE (CaseA) (EQ PARAM0 1) (IfCaseB PARAM0)
+	#Res
+^$
+
+VAR(In) <= (INPUT)
+(Switch In) => VAR(Res)
+VAR(Res) <= (ADD Res 5)
+(OUTPUT Res)
