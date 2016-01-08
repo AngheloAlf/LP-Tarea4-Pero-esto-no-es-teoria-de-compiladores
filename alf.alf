@@ -1,2 +1,5 @@
-   VAR(   wea) <= 5
+$^PROC(weafuncion)
+		 	 	 		 	     
+	VAR(PARAM5) <= 5
+^$
 5 => VAR(Wae)
