@@ -2,6 +2,8 @@ from stdlib import *
 
 def weafuncion(*params):
 	
-	params[5] = 5
+	hola = 5
+	hola = 8888
 
 Wae = 5
+

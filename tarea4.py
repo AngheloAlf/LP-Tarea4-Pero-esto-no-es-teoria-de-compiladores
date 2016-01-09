@@ -3,6 +3,7 @@ import sys, re
 
 NUMBERLINE = 0
 LINEAPROCESADA = ""
+PROC = False
 
 def getCommandName():
 	if sys.argv[1:]:
@@ -12,7 +13,7 @@ def getCommandName():
 		return "alf.alf"
 
 
-def SintaxError(mensaje = ""):
+def SintaxError(mensaje = "Error desconocido"):
 	print " -- ERROR de sintaxis. -- \nLinea:",NUMBERLINE, "\n"+LINEAPROCESADA
 	print mensaje
 	exit(0)
@@ -21,73 +22,85 @@ def SintaxError(mensaje = ""):
 def llamadoProcValido(linea): #terminar
 	return True
 
-def nombreVariableValido(linea):
-	if re.search("PARAM[0-9]+", linea):
-		return
-	if len(re.split("^[a-zA-Z]$", linea))>1:
-		SintaxError()
+def creacionVariableValido(linea):
+	if re.search("^PARAM[0-9]+$", linea):
+		SintaxError("Uso de nombre reservado para creacion de variable")
+	if len(re.split("[^a-zA-Z]*", linea))>1:
+		SintaxError("Uso de caracteres no permitidos para creacion de variable")
 	return
 
 def nombreValorValido(linea):
-	numeros = re.split("[[\-0-9]*|[0-9]*]", linea)
-	boolenas = re.split("TRUE|FALSE", linea)
-	charateres = re.split("[^a-zA-Z]", linea)
-	#print numeros
-	#print boolenas
-	if (len(numeros)>1 and len(boolenas)>1 and len(charateres)>1) or not llamadoProcValido(linea):
-		SintaxError()
+	if lineaVacia(linea):
+		SintaxError("No hay valor para asignar a la variable")
+	if len(re.split("^TRUE$", linea)) == 2:
+		return "True"
+	elif len(re.split("^FALSE$", linea)) == 2:
+		return "False"
+	elif len(re.split("[[\-0-9]*|[0-9]*]", linea)) == 2:
+		return linea
+	elif len(re.split("[^a-zA-Z]*", linea)) == 1:
+		return linea
+	else:
+		SintaxError("Asignacion de variable invalida")
+	return linea
 
-def revisarAsignacion(linea):
-	return re.search('<=', linea) or re.search('=>', linea)
+def revisarCreacionVariable(linea):
+	return re.search('^VAR\((.*)\)(.*)\s+<=\s+(.*)$', linea) or re.search('^(.*)\s+=>\s+VAR\((.*)\)$', linea)
 
 def lineaVacia(linea):
 	if re.search("^[\s\t]*$", linea):
 		return True
 	return False
 
-def asignacionAsignosa(variable, valor):
-	buscando = re.search("VAR", variable)
-	c = variable[buscando.span()[1]:]
-	variable = re.split("\(\s*(.*)\)", c)
-	variable = variable[1]
-	variable = re.sub("[\s\t]", "", variable)
-	nombreVariableValido(variable)
-	#param = re.split("PARAM", variable)
-	#if len(param)>1:
-	#	variable = "params["+param[1]+"]"
-	valor = re.sub("[\s\t]","",valor)
-	nombreValorValido(valor)
+def revisarReasignacionVariable(linea):
+	if re.search("VAR", linea): return False
+	return re.search('^(.*)<=(.*)$', linea) or re.search('^(.*)=>(.*)$', linea)
+
+def eliminarEspacios(linea):
+	return re.sub("[\s\t]+", "", linea)
+
+def asignacionAsignosa(variable, valor, crearVar):
+	if crearVar:
+		creacionVariableValido(variable)
+	else:
+		pass
+	valor = nombreValorValido(valor)
 	param = re.split("PARAM", valor)
 	if len(param)>1:
-		valor = "params["+param[1]+"]"
+		if PROC:
+			valor = "params["+param[1]+"]"
+		else:
+			SintaxError("Uso de la palabra reservada PARAM fuera de una funcion")
+	variable = eliminarEspacios(variable)
+	valor = eliminarEspacios(valor)
 	return variable+" = "+valor
 
-def generarAsignacion(linea):
-	if lineaVacia(linea):
-		return ""
+def generarAsignacion(linea, crearVar):
+	if lineaVacia(linea): return ""
 	asignacionIzq = re.split('<=', linea)
 	asignacionDer = re.split('=>', linea)
-
 	if len(asignacionIzq)>1:
-		return asignacionAsignosa(asignacionIzq[0], asignacionIzq[1])
-
+		if crearVar: variable = re.split("VAR\(\s*(.*)\)", asignacionIzq[0])[1]
+		else: variable = asignacionIzq[0]
+		valor = asignacionIzq[1]
 	if len(asignacionDer)>1:
-		return asignacionAsignosa(asignacionDer[1], asignacionDer[0])
+		if crearVar: variable = re.split("VAR\(\s*(.*)\)", asignacionDer[1])[1]
+		else: variable = asignacionDer[1]
+		valor =  asignacionDer[0]
+	return asignacionAsignosa(variable, valor, crearVar)
 
-	return None
-
-def revisarProcInicio(linea, proc):
+def revisarProcInicio(linea, PROC):
 	nombre = re.sub("\)", "", linea)
 	nombre = re.split("\$\^PROC\(", nombre)
-	if proc and re.search("\$\^PROC", linea): SintaxError("Funcion dentro de funcion")
-	if proc: return proc, None
+	if PROC and re.search("\$\^PROC", linea): SintaxError("Funcion dentro de funcion")
+	if PROC: return PROC, None
 	if re.search("\$\^PROC", linea): return True, nombre[1]
 	return False, None
 
-def revisarProcFin(linea, proc):
-	if not proc and re.search("\^\$", linea): SintaxError()
+def revisarProcFin(linea, PROC):
+	if not PROC and re.search("\^\$", linea): SintaxError()
 	if re.search("\^\$", linea): return False
-	if proc: return proc
+	if PROC: return PROC
 	return False
 
 def revisarReturn(linea): #terminar //se refiere al return de las funciones
@@ -102,30 +115,30 @@ def escribirArchivo(nombreArchivo, datosNuevos):
 nombreArchivo = getCommandName()
 datosNuevos = list()
 datosNuevos.append("from stdlib import *\n\n")
-proc = False
-inFuncData = list()
 
 archivo = open(nombreArchivo)
 for i in archivo:
 	NUMBERLINE += 1
 	LINEAPROCESADA = i
 	i = i.strip()
-	proc, nombreProc = revisarProcInicio(i, proc)
-	proc = revisarProcFin(i, proc)
-	if proc:
+	PROC, nombreProc = revisarProcInicio(i, PROC)
+	PROC = revisarProcFin(i, PROC)
+	if PROC:
 		if nombreProc:
 			datosNuevos.append("def "+nombreProc+"(*params):")
 		else:
 			datosNuevos.append("\t")
-			datosNuevos.append(generarAsignacion(i))
+			if revisarCreacionVariable(i):
+				datosNuevos.append(generarAsignacion(i, True))
+			elif revisarReasignacionVariable(i):
+				datosNuevos.append(generarAsignacion(i, False))
 	else:
-		inFuncData = list()
-		
-		if revisarAsignacion(i):
-			datosNuevos.append(generarAsignacion(i))
+		if revisarCreacionVariable(i):
+			datosNuevos.append(generarAsignacion(i, True))
 
 	datosNuevos.append("\n")
 
-print datosNuevos
+for i in datosNuevos:
+	print i,
 
 escribirArchivo(nombreArchivo, datosNuevos)

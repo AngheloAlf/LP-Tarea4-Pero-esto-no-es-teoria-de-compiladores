@@ -1,5 +1,7 @@
 $^PROC(weafuncion)
 		 	 	 		 	     
-	VAR(PARAM5) <= 5
+	VAR(hola) <= 5
+	8888 => hola
 ^$
 5 => VAR(Wae)
+PARAM0 <= 4
