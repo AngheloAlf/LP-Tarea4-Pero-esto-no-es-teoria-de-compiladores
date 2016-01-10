@@ -29,7 +29,7 @@ def llamadoProcValido(linea):
 	return False
 
 def formatearLlamadoProc(linea):
-	if re.search("\([\s\t]*\)", linea):
+	if re.search("\(\s*\)", linea):
 		return "pass"
 	a = re.split("\((.*)\)", linea)[1]
 	b = re.split("\s", a)
@@ -41,7 +41,7 @@ def creacionVariableValido(linea):
 	return
 
 def nombreVariableValido(linea):
-	if len([x for x in re.split("[\s\t]*", linea) if x]) != 1:
+	if len([x for x in re.split("\s*", linea) if x]) != 1:
 		if len(re.split("[^a-zA-Z]*", linea)) != 1:
 			sintaxError("Uso de caracteres no permitidos para una variable")
 	return
@@ -61,6 +61,8 @@ def nombreValorValido(linea):
 		return linea
 	elif not nombreVariableValido(linea):
 		return linea
+	elif revisarIFELSE(linea):
+		return formatearIFELESE(linea)
 	else:
 		sintaxError("Asignacion de variable invalida")
 	return linea
@@ -69,7 +71,7 @@ def revisarCreacionVariable(linea):
 	return re.search('^VAR\((.*)\)(.*)\s+<=\s+(.*)$', linea) or re.search('^(.*)\s+=>\s+VAR\((.*)\)$', linea)
 
 def lineaVacia(linea):
-	if re.search("^[\s\t]*$", linea):
+	if re.search("^\s*$", linea):
 		return True
 	return False
 
@@ -78,7 +80,7 @@ def revisarReasignacionVariable(linea):
 	return re.search('^(.*)<=(.*)$', linea) or re.search('^(.*)=>(.*)$', linea)
 
 def eliminarEspacios(linea):
-	return re.sub("[\s\t]+", "", linea)
+	return re.sub("\s+", "", linea)
 
 def paramFuncion(linea):
 	param = re.split("PARAM", linea)
@@ -135,7 +137,9 @@ def revisarProcFin(linea, PROC):
 	if PROC: return PROC
 	return False
 
-def revisarReturn(linea): # terminar //se refiere al return de las funciones
+def revisarReturn(linea): 
+	if not PROC:
+		sintaxError("Return fuera de una funcion")
 	a = re.search("^(\s*)#", linea)
 	if a:
 		b = a.span()
@@ -144,11 +148,44 @@ def revisarReturn(linea): # terminar //se refiere al return de las funciones
 			return "return "+eliminarEspacios(c)
 	return ""
 
+def revisarIFELSE(linea):
+	if re.search("^IFELSE\s+", linea):
+		newLinea = re.sub("IFELSE\s+", "", linea)
+		return len(re.split("\)\s+|\s+\(", newLinea)) == 3
+	return False
+
+def agregarParentesis(linea, verificar = False):
+	if verificar and not re.search("\(|\)", linea):
+		return linea
+	if not re.search("\(", linea):
+		linea = "("+linea
+	if not re.search("\)", linea):
+		linea = linea+")"
+	return linea
+
+def formatearIFELESE(linea):
+	newLinea = re.sub("IFELSE\s+", "", linea)
+	newLinea = re.split("\)\s+|\s+\(", newLinea)
+	si = agregarParentesis(newLinea[0])
+	condicion = agregarParentesis(newLinea[1], True)
+	sino = agregarParentesis(newLinea[2])
+	if llamadoProcValido(si) and llamadoProcValido(sino):
+		si, sino = formatearLlamadoProc(si), formatearLlamadoProc(sino)
+	if llamadoProcValido(condicion):
+		condicion = formatearLlamadoProc(condicion)
+	else:
+		condicion = nombreValorValido(condicion)
+	return si+" if "+condicion+" else "+sino
+
 def escribirArchivo(nombreArchivo, datosNuevos):
 	escribirData = open(nombreArchivo+".py", "w")
 	for i in datosNuevos:
+		print i,
 		escribirData.write(i)
 	return
+
+def pseudoSwitch():
+	pass
 
 nombreArchivo = getCommandName()
 datosNuevos = list()
@@ -180,6 +217,8 @@ for i in archivo:
 				datosNuevos.append(" = ".join(asignacion))
 			elif llamadoProcValido(i):
 				datosNuevos.append(formatearLlamadoProc(i))
+			elif revisarIFELSE(i):
+				datosNuevos.append(formatearIFELESE(i))
 			elif retornoFuncion:
 				datosNuevos.append(retornoFuncion)
 	else:
@@ -193,14 +232,13 @@ for i in archivo:
 			if asignacion[0] not in variablesGlobales:
 				sintaxError("La variable "+asignacion[0]+" no fue creada")
 			datosNuevos.append(" = ".join(asignacion))
+		elif revisarIFELSE(i):
+			datosNuevos.append(formatearIFELESE(i))
 		elif llamadoProcValido(i):
 			datosNuevos.append(formatearLlamadoProc(i))
 
 	datosNuevos.append("\n")
 archivo.close()
-
-for i in datosNuevos:
-	print i,
 
 escribirArchivo(nombreArchivo, datosNuevos)
 print "Se ha creado el archivo "+nombreArchivo+".py"+" de forma satisfactoria"

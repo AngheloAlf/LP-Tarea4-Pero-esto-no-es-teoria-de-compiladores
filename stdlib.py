@@ -1,6 +1,5 @@
 def EQ(A, B):
-	if A == B: return True
-	else: return False
+	return A == B
 
 def NEQ(A, B):
 	return not EQ(A, B)

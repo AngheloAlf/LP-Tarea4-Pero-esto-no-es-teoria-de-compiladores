@@ -24,6 +24,17 @@ $^PROC(Switch)
 	#Res
 ^$
 
+$^PROC(same)
+    #PARAM0
+^$
+
+$^PROC(multi)
+    VAR(a) <= PARAM0
+    VAR(c) <= (SUB PARAM1 1)
+    VAR(d) <= IFELSE (same a) (EQ c 1) (multi a c)
+    #(ADD d a)
+^$
+
 VAR(In) <= (INPUT)
 (Switch In) => VAR(Res)
 VAR(Res) <= (ADD Res 5)
