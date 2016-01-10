@@ -25,8 +25,12 @@ def llamadoProcValido(linea): #terminar
 def creacionVariableValido(linea):
 	if re.search("^PARAM[0-9]+$", linea):
 		SintaxError("Uso de nombre reservado para creacion de variable")
-	if len(re.split("[^a-zA-Z]*", linea))>1:
-		SintaxError("Uso de caracteres no permitidos para creacion de variable")
+	return
+
+def nombreVariableValido(linea):
+	if len([x for x in re.split("[\s\t]*", linea) if x]) != 1:
+		if len(re.split("[^a-zA-Z]*", linea)) != 1:
+			SintaxError("Uso de caracteres no permitidos para una variable")
 	return
 
 def nombreValorValido(linea):
@@ -62,8 +66,7 @@ def eliminarEspacios(linea):
 def asignacionAsignosa(variable, valor, crearVar):
 	if crearVar:
 		creacionVariableValido(variable)
-	else:
-		pass
+	nombreVariableValido(variable)
 	valor = nombreValorValido(valor)
 	param = re.split("PARAM", valor)
 	if len(param)>1:
