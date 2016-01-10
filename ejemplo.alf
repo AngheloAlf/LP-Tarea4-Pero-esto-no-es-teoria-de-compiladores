@@ -39,3 +39,6 @@ VAR(In) <= (INPUT)
 (Switch In) => VAR(Res)
 VAR(Res) <= (ADD Res 5)
 (OUTPUT Res)
+
+VAR(ejemplo) <= (multi 8 9)
+(OUTPUT ejemplo)

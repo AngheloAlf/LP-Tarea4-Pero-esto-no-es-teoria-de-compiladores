@@ -8,11 +8,9 @@ PROC = False
 
 def getCommandName():
 	if sys.argv[1:]:
-		nombre = " ".join(sys.argv[1:])
-		return nombre
+		return " ".join(sys.argv[1:])
 	else:
-		return "alf.alf"
-
+		return "ejemplo.alf"
 
 def sintaxError(mensaje = "Error desconocido"):
 	print " -- ERROR de sintaxis. -- \nLinea:",NUMBERLINE, "\n"+LINEAPROCESADA
@@ -40,8 +38,11 @@ def creacionVariableValido(linea):
 		sintaxError("Uso de nombre reservado para creacion de variable")
 	return
 
+def borrarNulos(lista):
+	return [x for x in lista if x]
+
 def nombreVariableValido(linea):
-	if len([x for x in re.split("\s*", linea) if x]) != 1:
+	if len(borrarNulos(re.split("\s*", linea))) != 1:
 		if len(re.split("[^a-zA-Z]*", linea)) != 1:
 			sintaxError("Uso de caracteres no permitidos para una variable")
 	return
@@ -51,6 +52,8 @@ def nombreValorValido(linea):
 		sintaxError("No hay valor para asignar a la variable")
 	elif re.search("^PARAM[0-9]+$", linea):
 		return "params["+re.split("PARAM", linea)[1]+"]"
+	elif revisarIFELSE(linea):
+		return formatearIFELESE(linea)
 	elif llamadoProcValido(linea):
 		return formatearLlamadoProc(linea)
 	elif len(re.split("^TRUE$", linea)) == 2:
@@ -58,14 +61,11 @@ def nombreValorValido(linea):
 	elif len(re.split("^FALSE$", linea)) == 2:
 		return "False"
 	elif len(re.split("[[\-0-9]*|[0-9]*]", linea)) == 2:
-		return linea
+		return eliminarEspacios(linea)
 	elif not nombreVariableValido(linea):
-		return linea
-	elif revisarIFELSE(linea):
-		return formatearIFELESE(linea)
+		return eliminarEspacios(linea)
 	else:
 		sintaxError("Asignacion de variable invalida")
-	return linea
 
 def revisarCreacionVariable(linea):
 	return re.search('^VAR\((.*)\)(.*)\s+<=\s+(.*)$', linea) or re.search('^(.*)\s+=>\s+VAR\((.*)\)$', linea)
@@ -102,7 +102,6 @@ def asignacionAsignosa(variable, valor):
 	if param:
 		valor = param
 	variable = eliminarEspacios(variable)
-	valor = eliminarEspacios(valor)
 	return variable, valor
 
 def generarAsignacion(linea):
@@ -147,9 +146,10 @@ def revisarReturn(linea):
 	return ""
 
 def revisarIFELSE(linea):
-	if re.search("^IFELSE\s+", linea):
-		newLinea = re.sub("IFELSE\s+", "", linea)
-		return len(re.split("\)\s+|\s+\(", newLinea)) == 3
+	if re.search("^\s*IFELSE\s+", linea):
+		newLinea = re.sub("\s*IFELSE\s+", "", linea)
+		cortado = re.split("\)\s+|\s+\(", newLinea)
+		return len(borrarNulos(cortado)) == 3
 	return False
 
 def agregarParentesis(linea, verificar = False):
@@ -162,7 +162,7 @@ def agregarParentesis(linea, verificar = False):
 	return linea
 
 def formatearIFELESE(linea):
-	newLinea = re.sub("IFELSE\s+", "", linea)
+	newLinea = re.sub("\s*IFELSE\s+", "", linea)
 	newLinea = re.split("\)\s+|\s+\(", newLinea)
 	si = agregarParentesis(newLinea[0])
 	condicion = agregarParentesis(newLinea[1], True)
@@ -183,9 +183,9 @@ def escribirArchivo(nombreArchivo, datosNuevos):
 	return
 
 def pseudoSwitch(linea, variablesLocales, variablesGlobales):
-	if re.search("^\s*\^\$\s*$", linea): return ""
 	retornoFuncion = revisarReturn(linea)
-	if revisarCreacionVariable(linea):
+	if retornoFuncion: return retornoFuncion
+	elif revisarCreacionVariable(linea):
 		asignacion = generarAsignacion(linea)
 		variablesLocales.append(asignacion[0])
 		return " = ".join(asignacion)
@@ -196,7 +196,6 @@ def pseudoSwitch(linea, variablesLocales, variablesGlobales):
 		return " = ".join(asignacion)
 	elif llamadoProcValido(linea): return formatearLlamadoProc(linea)
 	elif revisarIFELSE(linea): return formatearIFELESE(linea)
-	elif retornoFuncion: return retornoFuncion
 	return ""
 
 nombreArchivo = getCommandName()
@@ -212,6 +211,7 @@ for i in archivo:
 	i = i.strip()
 	PROC, nombreProc = revisarProcInicio(i, PROC)
 	PROC = revisarProcFin(i, PROC)
+	if re.search("^\s*\^\$\s*$", i): continue
 	if PROC:
 		if nombreProc:
 			datosNuevos.append("def "+nombreProc+"(*params):")
