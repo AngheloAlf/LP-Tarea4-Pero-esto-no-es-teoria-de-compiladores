@@ -1,7 +1,7 @@
-$^PROC(weafuncion)
-		 	 	 		 	     
+$^PROC   (weafuncion) 	     
 	VAR(hola) <= 5
-	8888 => hola
+	VAR(sfasdg) <= hola
+	    8888     =>    hola
+	#    sfasdg
 ^$
 5 => VAR(Wae)
-PARAM0 <= 4
