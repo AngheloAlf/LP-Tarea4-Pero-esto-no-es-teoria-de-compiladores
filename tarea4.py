@@ -20,8 +20,18 @@ def sintaxError(mensaje = "Error desconocido"):
 	exit(0)
 	return
 
-def llamadoProcValido(linea): # terminar
-	return True
+def llamadoProcValido(linea):
+	a = re.split("\((.*)\)", linea)
+	if not a: return False
+	if len(a)>1:
+		if re.search("\(|\)", a[1]): sintaxError("Se realizo llamado de funcion dentro de llamado de funcion")
+		return True
+	return False
+
+def formatearLlamadoProc(linea):
+	a = re.split("\((.*)\)", linea)[1]
+	b = re.split("\s", a)
+	return b[0]+"("+", ".join(map(nombreValorValido, b[1:]))+")"
 
 def creacionVariableValido(linea):
 	if re.search("^PARAM[0-9]+$", linea):
@@ -159,6 +169,8 @@ for i in archivo:
 				if asignacion[0] not in variablesLocales and asignacion[0] not in variablesGlobales:
 					sintaxError("La variable "+asignacion[0]+" no fue creada")
 				datosNuevos.append(" = ".join(asignacion))
+			elif llamadoProcValido(i):
+				datosNuevos.append(formatearLlamadoProc(i))
 			elif retornoFuncion:
 				datosNuevos.append(retornoFuncion)
 	else:
@@ -172,6 +184,8 @@ for i in archivo:
 			if asignacion[0] not in variablesGlobales:
 				sintaxError("La variable "+asignacion[0]+" no fue creada")
 			datosNuevos.append(" = ".join(asignacion))
+		elif llamadoProcValido(i):
+			datosNuevos.append(formatearLlamadoProc(i))
 
 	datosNuevos.append("\n")
 archivo.close()
@@ -180,3 +194,4 @@ for i in datosNuevos:
 	print i,
 
 escribirArchivo(nombreArchivo, datosNuevos)
+print "Se ha creado el archivo "+nombreArchivo+".py"+" de forma satisfactoria"

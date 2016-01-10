@@ -7,3 +7,5 @@ def weafuncion(*params):
 	return sfasdg
 
 Wae = 5
+
+ADD(Wae, 8)

@@ -5,3 +5,5 @@ $^PROC   (weafuncion)
 	#    sfasdg
 ^$
 5 => VAR(Wae)
+
+(ADD Wae 8)
