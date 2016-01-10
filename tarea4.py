@@ -47,7 +47,11 @@ def nombreVariableValido(linea):
 def nombreValorValido(linea):
 	if lineaVacia(linea):
 		sintaxError("No hay valor para asignar a la variable")
-	if len(re.split("^TRUE$", linea)) == 2:
+	elif re.search("^PARAM[0-9]+$", linea):
+		return "params["+re.split("PARAM", linea)[1]+"]"
+	elif llamadoProcValido(linea):
+		return formatearLlamadoProc(linea)
+	elif len(re.split("^TRUE$", linea)) == 2:
 		return "True"
 	elif len(re.split("^FALSE$", linea)) == 2:
 		return "False"
@@ -83,9 +87,8 @@ def paramFuncion(linea):
 			sintaxError("Uso de la palabra reservada PARAM fuera de una funcion")
 	return None
 
-def asignacionAsignosa(variable, valor, crearVar):
-	if crearVar:
-		creacionVariableValido(variable)
+def asignacionAsignosa(variable, valor):
+	creacionVariableValido(variable)
 	param = paramFuncion(variable)
 	if param:
 		variable = param
@@ -98,19 +101,23 @@ def asignacionAsignosa(variable, valor, crearVar):
 	valor = eliminarEspacios(valor)
 	return variable, valor
 
-def generarAsignacion(linea, crearVar):
+def generarAsignacion(linea):
 	if lineaVacia(linea): return ""
 	asignacionIzq = re.split('<=', linea)
 	asignacionDer = re.split('=>', linea)
 	if len(asignacionIzq)>1:
-		if crearVar: variable = re.split("VAR\(\s*(.*)\)", asignacionIzq[0])[1]
-		else: variable = asignacionIzq[0]
+		variable = re.split("VAR\(\s*(.*)\)", asignacionIzq[0])
+		if len(variable) == 1:
+			sintaxError("Asignacion de una variable sin el uso de VAR")
+		variable = variable[1]
 		valor = asignacionIzq[1]
 	if len(asignacionDer)>1:
-		if crearVar: variable = re.split("VAR\(\s*(.*)\)", asignacionDer[1])[1]
-		else: variable = asignacionDer[1]
+		variable = re.split("VAR\(\s*(.*)\)", asignacionDer[1])
+		if len(variable) == 1:
+			sintaxError("Asignacion de una variable sin el uso de VAR")
+		variable = variable[1]
 		valor =  asignacionDer[0]
-	return asignacionAsignosa(variable, valor, crearVar)
+	return asignacionAsignosa(variable, valor)
 
 def revisarProcInicio(linea, PROC):
 	nombre = re.sub("\)", "", linea)
@@ -161,11 +168,11 @@ for i in archivo:
 			datosNuevos.append("\t")
 			retornoFuncion = revisarReturn(i)
 			if revisarCreacionVariable(i):
-				asignacion = generarAsignacion(i, True)
+				asignacion = generarAsignacion(i)
 				variablesLocales.append(asignacion[0])
 				datosNuevos.append(" = ".join(asignacion))
 			elif revisarReasignacionVariable(i):
-				asignacion = generarAsignacion(i, False)
+				asignacion = generarAsignacion(i)
 				if asignacion[0] not in variablesLocales and asignacion[0] not in variablesGlobales:
 					sintaxError("La variable "+asignacion[0]+" no fue creada")
 				datosNuevos.append(" = ".join(asignacion))
@@ -176,11 +183,11 @@ for i in archivo:
 	else:
 		variablesLocales = list()
 		if revisarCreacionVariable(i):
-			asignacion = generarAsignacion(i, True)
+			asignacion = generarAsignacion(i)
 			variablesGlobales.append(asignacion[0])
 			datosNuevos.append(" = ".join(asignacion))
 		elif revisarReasignacionVariable(i):
-			asignacion = generarAsignacion(i, False)
+			asignacion = generarAsignacion(i)
 			if asignacion[0] not in variablesGlobales:
 				sintaxError("La variable "+asignacion[0]+" no fue creada")
 			datosNuevos.append(" = ".join(asignacion))

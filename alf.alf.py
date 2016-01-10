@@ -4,8 +4,10 @@ def weafuncion(*params):
 	hola = 5
 	sfasdg = hola
 	hola = 8888
-	return sfasdg
+	return params[1]
 
 Wae = 5
-
-ADD(Wae, 8)
+algo = weafuncion(True,9)
+OUTPUT(algo)
+a = ADD(Wae,8)
+OUTPUT(a)

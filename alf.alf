@@ -1,9 +1,12 @@
 $^PROC   (weafuncion) 	     
 	VAR(hola) <= 5
 	VAR(sfasdg) <= hola
-	    8888     =>    hola
-	#    sfasdg
+	    8888     =>    VAR(hola)
+	#PARAM1
 ^$
-5 => VAR(Wae)
 
-(ADD Wae 8)
+5 => VAR(Wae)
+(weafuncion TRUE 9) => VAR(algo)
+(OUTPUT algo)
+VAR(a) <= (ADD Wae 8)
+(OUTPUT a)
