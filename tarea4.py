@@ -111,14 +111,12 @@ def generarAsignacion(linea):
 	asignacionDer = re.split('=>', linea)
 	if len(asignacionIzq)>1:
 		variable = re.split("VAR\(\s*(.*)\)", asignacionIzq[0])
-		if len(variable) == 1:
-			sintaxError("Asignacion de una variable sin el uso de VAR")
+		if len(variable) == 1: sintaxError("Asignacion de una variable sin el uso de VAR")
 		variable = variable[1]
 		valor = asignacionIzq[1]
 	if len(asignacionDer)>1:
 		variable = re.split("VAR\(\s*(.*)\)", asignacionDer[1])
-		if len(variable) == 1:
-			sintaxError("Asignacion de una variable sin el uso de VAR")
+		if len(variable) == 1: sintaxError("Asignacion de una variable sin el uso de VAR")
 		variable = variable[1]
 		valor =  asignacionDer[0]
 	return asignacionAsignosa(variable, valor)
@@ -138,10 +136,10 @@ def revisarProcFin(linea, PROC):
 	return False
 
 def revisarReturn(linea): 
-	if not PROC:
-		sintaxError("Return fuera de una funcion")
 	a = re.search("^(\s*)#", linea)
 	if a:
+		if not PROC:
+			sintaxError("Return fuera de una funcion")
 		b = a.span()
 		c = nombreValorValido(linea[b[1]:])
 		if c:
@@ -184,8 +182,22 @@ def escribirArchivo(nombreArchivo, datosNuevos):
 		escribirData.write(i)
 	return
 
-def pseudoSwitch():
-	pass
+def pseudoSwitch(linea, variablesLocales, variablesGlobales):
+	if re.search("^\s*\^\$\s*$", linea): return ""
+	retornoFuncion = revisarReturn(linea)
+	if revisarCreacionVariable(linea):
+		asignacion = generarAsignacion(linea)
+		variablesLocales.append(asignacion[0])
+		return " = ".join(asignacion)
+	elif revisarReasignacionVariable(linea):
+		asignacion = generarAsignacion(linea)
+		if asignacion[0] not in variablesLocales and asignacion[0] not in variablesGlobales:
+			sintaxError("La variable "+asignacion[0]+" no fue creada")
+		return " = ".join(asignacion)
+	elif llamadoProcValido(linea): return formatearLlamadoProc(linea)
+	elif revisarIFELSE(linea): return formatearIFELESE(linea)
+	elif retornoFuncion: return retornoFuncion
+	return ""
 
 nombreArchivo = getCommandName()
 datosNuevos = list()
@@ -205,38 +217,10 @@ for i in archivo:
 			datosNuevos.append("def "+nombreProc+"(*params):")
 		else:
 			datosNuevos.append("\t")
-			retornoFuncion = revisarReturn(i)
-			if revisarCreacionVariable(i):
-				asignacion = generarAsignacion(i)
-				variablesLocales.append(asignacion[0])
-				datosNuevos.append(" = ".join(asignacion))
-			elif revisarReasignacionVariable(i):
-				asignacion = generarAsignacion(i)
-				if asignacion[0] not in variablesLocales and asignacion[0] not in variablesGlobales:
-					sintaxError("La variable "+asignacion[0]+" no fue creada")
-				datosNuevos.append(" = ".join(asignacion))
-			elif llamadoProcValido(i):
-				datosNuevos.append(formatearLlamadoProc(i))
-			elif revisarIFELSE(i):
-				datosNuevos.append(formatearIFELESE(i))
-			elif retornoFuncion:
-				datosNuevos.append(retornoFuncion)
+			datosNuevos.append(pseudoSwitch(i, variablesLocales, variablesGlobales))
 	else:
 		variablesLocales = list()
-		if revisarCreacionVariable(i):
-			asignacion = generarAsignacion(i)
-			variablesGlobales.append(asignacion[0])
-			datosNuevos.append(" = ".join(asignacion))
-		elif revisarReasignacionVariable(i):
-			asignacion = generarAsignacion(i)
-			if asignacion[0] not in variablesGlobales:
-				sintaxError("La variable "+asignacion[0]+" no fue creada")
-			datosNuevos.append(" = ".join(asignacion))
-		elif revisarIFELSE(i):
-			datosNuevos.append(formatearIFELESE(i))
-		elif llamadoProcValido(i):
-			datosNuevos.append(formatearLlamadoProc(i))
-
+		datosNuevos.append(pseudoSwitch(i, variablesGlobales, variablesGlobales))
 	datosNuevos.append("\n")
 archivo.close()
 
