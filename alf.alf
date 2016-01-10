@@ -4,7 +4,7 @@ $^PROC   (weafuncion)
 	    8888     =>    VAR(hola)
 	#PARAM1
 ^$
-
+()
 5 => VAR(Wae)
 (weafuncion TRUE 9) => VAR(algo)
 (OUTPUT algo)

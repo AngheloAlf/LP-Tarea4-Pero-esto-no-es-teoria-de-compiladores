@@ -29,6 +29,8 @@ def llamadoProcValido(linea):
 	return False
 
 def formatearLlamadoProc(linea):
+	if re.search("\([\s\t]*\)", linea):
+		return "pass"
 	a = re.split("\((.*)\)", linea)[1]
 	b = re.split("\s", a)
 	return b[0]+"("+", ".join(map(nombreValorValido, b[1:]))+")"

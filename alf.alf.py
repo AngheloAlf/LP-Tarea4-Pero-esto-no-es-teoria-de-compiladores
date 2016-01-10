@@ -6,6 +6,7 @@ def weafuncion(*params):
 	hola = 8888
 	return params[1]
 
+pass
 Wae = 5
 algo = weafuncion(True,9)
 OUTPUT(algo)
