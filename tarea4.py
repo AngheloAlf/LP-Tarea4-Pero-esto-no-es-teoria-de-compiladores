@@ -6,11 +6,17 @@ NUMBERLINE = 0
 LINEAPROCESADA = ""
 PROC = False
 
+def IOerror(mensaje = "Error desconocido"):
+	print " -- I/O ERROR -- "
+	print mensaje
+	exit(0)
+	return
+
 def getCommandName():
 	if sys.argv[1:]:
 		return " ".join(sys.argv[1:])
 	else:
-		return "ejemplo.alf"
+		IOerror("No se ingreso un archivo para traducir.")
 
 def sintaxError(mensaje = "Error desconocido"):
 	print " -- ERROR de sintaxis. -- \nLinea:",NUMBERLINE, "\n"+LINEAPROCESADA
@@ -199,12 +205,16 @@ def pseudoSwitch(linea, variablesLocales, variablesGlobales):
 	return ""
 
 nombreArchivo = getCommandName()
+try:
+	archivo = open(nombreArchivo)
+except:
+	IOerror("No se encontro el archivo llamado "+nombreArchivo+".")
+
 datosNuevos = list()
 datosNuevos.append("from stdlib import *\n\n")
 variablesGlobales = list()
 variablesLocales = list()
 
-archivo = open(nombreArchivo)
 for i in archivo:
 	NUMBERLINE += 1
 	LINEAPROCESADA = i
