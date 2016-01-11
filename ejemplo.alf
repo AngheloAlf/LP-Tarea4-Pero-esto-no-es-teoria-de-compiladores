@@ -34,7 +34,7 @@ $^PROC(multi)
     VAR(d) <= IFELSE (same a) (EQ c 1) (multi a c)
     #(ADD d a)
 ^$
-In <= 4
+
 VAR(In) <= (INPUT)
 (Switch In) => VAR(Res)
 VAR(Res) <= (ADD Res 5)
