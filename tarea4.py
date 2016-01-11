@@ -1,28 +1,7 @@
-import sys, re
+import re
+from generalFunctions import *
 
-# print sys.argv[1:]
-
-NUMBERLINE = 0
-LINEAPROCESADA = ""
 PROC = False
-
-def IOerror(mensaje = "Error desconocido"):
-	print " -- I/O ERROR -- "
-	print mensaje
-	exit(0)
-	return
-
-def getCommandName():
-	if sys.argv[1:]:
-		return " ".join(sys.argv[1:])
-	else:
-		IOerror("No se ingreso un archivo para traducir.")
-
-def sintaxError(mensaje = "Error desconocido"):
-	print " -- ERROR de sintaxis. -- \nLinea:",NUMBERLINE, "\n"+LINEAPROCESADA
-	print mensaje
-	exit(0)
-	return
 
 def llamadoProcValido(linea):
 	a = re.split("\((.*)\)", linea)
@@ -43,9 +22,6 @@ def creacionVariableValido(linea):
 	if re.search("^PARAM[0-9]+$", linea):
 		sintaxError("Uso de nombre reservado para creacion de variable")
 	return
-
-def borrarNulos(lista):
-	return [x for x in lista if x]
 
 def nombreVariableValido(linea):
 	if len(borrarNulos(re.split("\s*", linea))) != 1:
@@ -181,13 +157,6 @@ def formatearIFELESE(linea):
 		condicion = nombreValorValido(condicion)
 	return si+" if "+condicion+" else "+sino
 
-def escribirArchivo(nombreArchivo, datosNuevos):
-	escribirData = open(nombreArchivo+".py", "w")
-	for i in datosNuevos:
-		print i,
-		escribirData.write(i)
-	return
-
 def pseudoSwitch(linea, variablesLocales, variablesGlobales):
 	retornoFuncion = revisarReturn(linea)
 	if retornoFuncion: return retornoFuncion
@@ -216,8 +185,8 @@ variablesGlobales = list()
 variablesLocales = list()
 
 for i in archivo:
-	NUMBERLINE += 1
-	LINEAPROCESADA = i
+	errorAux.NUMBERLINE += 1
+	errorAux.LINEAPROCESADA = i
 	i = i.strip()
 	PROC, nombreProc = revisarProcInicio(i, PROC)
 	PROC = revisarProcFin(i, PROC)
