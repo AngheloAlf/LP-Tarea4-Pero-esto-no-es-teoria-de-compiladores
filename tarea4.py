@@ -3,22 +3,22 @@ from traductorFunctions import *
 
 
 def pseudo_switch(linea, variableslocales, variablesglobales):
-    retorno_funcion = revisarReturn(linea)
+    retorno_funcion = revisar_return(linea)
     if retorno_funcion:
         return retorno_funcion
-    elif revisarCreacionVariable(linea):
-        asignacion = generarAsignacion(linea)
+    elif revisar_creacion_variable(linea):
+        asignacion = generar_asignacion(linea)
         variablesLocales.append(asignacion[0])
         return " = ".join(asignacion)
-    elif revisarReasignacionVariable(linea):
-        asignacion = generarAsignacion(linea)
+    elif revisar_reasignacion_variable(linea):
+        asignacion = generar_asignacion(linea)
         if asignacion[0] not in variableslocales and asignacion[0] not in variablesglobales:
             sintax_error("La variable "+asignacion[0]+" no fue creada")
         return " = ".join(asignacion)
-    elif llamadoProcValido(linea):
-        return formatearLlamadoProc(linea)
-    elif revisarIFELSE(linea):
-        return formatearIFELESE(linea)
+    elif llamado_proc_valido(linea):
+        return formatear_llamado_proc(linea)
+    elif revisarifelse(linea):
+        return formatearifelse(linea)
     return ""
 
 nombreArchivo = get_command_name()
@@ -37,11 +37,11 @@ for i in archivo:
     ErrorAux.NUMBERLINE += 1
     ErrorAux.LINEAPROCESADA = i
     i = i.strip()
-    proc.PROC, nombreProc = revisarProcInicio(i, proc.PROC)
-    proc.PROC = revisarProcFin(i, proc.PROC)
+    Proc.PROC, nombreProc = revisar_proc_inicio(i, Proc.PROC)
+    Proc.PROC = revisar_proc_fin(i, Proc.PROC)
     if re.search("^\s*\^\$\s*$", i):
         continue
-    if proc.PROC:
+    if Proc.PROC:
         if nombreProc:
             datosNuevos.append("def "+nombreProc+"(*params):")
         else:
