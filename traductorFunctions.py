@@ -2,7 +2,7 @@ import re
 from generalFunctions import sintax_error, borrar_nulos
 
 
-class Proc:
+class Proc(object):
     def __init__(self):
         pass
     PROC = False
@@ -107,7 +107,6 @@ def generar_asignacion(linea):
         return ""
     asignacion_izq = re.split('<=', linea)
     asignacion_der = re.split('=>', linea)
-    valor, variable = "", ""
     if len(asignacion_izq) > 1:
         variable = re.split("VAR\(\s*(.*)\)", asignacion_izq[0])
         if len(variable) == 1:
@@ -120,6 +119,8 @@ def generar_asignacion(linea):
             sintax_error("Asignacion de una variable sin el uso de VAR")
         variable = variable[1]
         valor = asignacion_der[0]
+    else:
+        sintax_error("Expresion invalida")
     return asignacion_asignosa(variable, valor)
 
 

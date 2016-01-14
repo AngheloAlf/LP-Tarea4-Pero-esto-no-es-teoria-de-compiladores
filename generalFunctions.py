@@ -1,7 +1,7 @@
 import sys
 
 
-class ErrorAux:
+class ErrorAux(object):
     def __init__(self):
         pass
     NUMBERLINE = 0
