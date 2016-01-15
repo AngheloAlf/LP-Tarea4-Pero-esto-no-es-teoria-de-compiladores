@@ -43,9 +43,9 @@ for i in archivo:
         continue
     if Proc.PROC:
         if nombreProc:
-            datosNuevos.append("def "+nombreProc+"(*params):")
+            datosNuevos.append("\ndef "+nombreProc+"(*params):")
         else:
-            datosNuevos.append("\t")
+            datosNuevos.append("    ")
             datosNuevos.append(pseudo_switch(i, variablesLocales, variablesGlobales))
     else:
         variablesLocales = list()

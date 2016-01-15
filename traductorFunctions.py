@@ -102,11 +102,7 @@ def asignacion_asignosa(variable, valor):
     return variable, valor
 
 
-def generar_asignacion(linea):
-    if linea_vacia(linea):
-        return ""
-    asignacion_izq = re.split('<=', linea)
-    asignacion_der = re.split('=>', linea)
+def generar_valor_variable(asignacion_izq, asignacion_der):
     if len(asignacion_izq) > 1:
         variable = re.split("VAR\(\s*(.*)\)", asignacion_izq[0])
         if len(variable) == 1:
@@ -121,6 +117,16 @@ def generar_asignacion(linea):
         valor = asignacion_der[0]
     else:
         sintax_error("Expresion invalida")
+        return
+    return variable, valor
+
+
+def generar_asignacion(linea):
+    if linea_vacia(linea):
+        return ""
+    asignacion_izq = re.split('<=', linea)
+    asignacion_der = re.split('=>', linea)
+    variable, valor = generar_valor_variable(asignacion_izq, asignacion_der)
     return asignacion_asignosa(variable, valor)
 
 
@@ -147,14 +153,14 @@ def revisar_proc_fin(linea, proc):
 
 
 def revisar_return(linea):
-    a = re.search("^(\s*)#", linea)
-    if a:
+    formato_return = re.search("^\s*#", linea)
+    if formato_return:
         if not Proc.PROC:
             sintax_error("Return fuera de una funcion")
-        b = a.span()
-        c = nombre_valor_valido(linea[b[1]:])
-        if c:
-            return "return "+eliminar_espacios(c)
+        sin_espacios = " ".join(re.split("#|\s+", linea)[1:])
+        retorno = nombre_valor_valido(sin_espacios)
+        if retorno:
+            return "return "+retorno
     return ""
 
 
